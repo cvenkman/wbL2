@@ -1,5 +1,13 @@
 package main
 
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"sort"
+	"strings"
+)
+
 /*
 === Утилита sort ===
 
@@ -26,5 +34,34 @@ package main
 */
 
 func main() {
+	err := run()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+}
 
+func run() error {
+	args := os.Args
+	file, err := os.Open(args[1])
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+
+	tmpData, err := ioutil.ReadFile(file.Name())
+	if err != nil {
+		return err
+	}
+	data := strings.Split(string(tmpData), "\n")
+	
+	// sort.Strings(data)
+
+	reverse := sort.StringSlice(data)
+	sort.Sort(sort.Reverse(reverse))
+	for _, str := range data {
+		fmt.Println(str)
+	}
+	return nil
 }

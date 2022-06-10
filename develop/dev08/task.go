@@ -42,7 +42,6 @@ func main() {
 		if input == "\n" {
 			continue
 		}
-		
 		if err = execInput(input); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -52,6 +51,7 @@ func main() {
 // execute input command
 func execInput(input string) error {
 	input = strings.TrimSuffix(input, "\n")
+	input = strings.TrimSpace(input)
 
 	// Split the input to separate the command and the arguments
 	args := strings.Split(input, " ")
@@ -60,7 +60,7 @@ func execInput(input string) error {
 	switch args[0] {
 	case "cd":
 		return cd(args)
-	case "echo":
+	case "echo", "ECHO":
 		return echo(args)
 	}
 
@@ -75,6 +75,19 @@ func execInput(input string) error {
 	return cmd.Run()
 }
 
+//В Linux запущенный экземпляр программы называется процессом.
+// ps для получения списка запущенных в данный момент процессов
+//ps выводит четыре столбца информации как минимум для двух процессов, запущенных
+//в текущей оболочке, самой оболочки и процессов, запущенных в оболочке при вызове команды.
+// PID - Идентификатор процесса
+// TTY - Имя управляющего терминала для процесса.
+// TIME - Совокупное время ЦП процесса, показанное в минутах и ​​секундах.
+// CMD - Имя команды, которая использовалась для запуска процесса.
+func ps(args []string) error {
+	// https://stackoverflow.com/questions/9030680/list-of-currently-running-process-in-go
+	return nil
+}
+
 func echo(args []string) error {
 	quotesNum := 0
 	quotesNum2 := 0
@@ -86,6 +99,20 @@ func echo(args []string) error {
 	if quotesNum % 2 != 0 || quotesNum2 % 2 != 0 {
 		return errors.New("незакрытая кавычка")
 	}
+
+	// ENV
+	for i, arg := range args {
+		if len(arg) > 1 && (arg[0] == '$' || arg[:2] == "\"$") {
+			arg = strings.Trim(arg, "\"")
+			arg = strings.TrimPrefix(arg, "$")
+
+			args[i] = os.Getenv(arg)
+			if args[i] == "" {
+				args = append(args[:i], args[i+1:]...)
+			}
+		}
+	}
+
 	// remove quotes
 	for i := range args {
 		args[i] = strings.Replace(args[i], "'", "", -1)
@@ -98,17 +125,32 @@ func echo(args []string) error {
 }
 
 func cd(args []string) error {
+	prevPed, err := os.Getwd()
+	if err != nil {
+		return errors.New("pwd error")
+	}
+	
 	var moveTo string
-
-	// 'cd' to home dir
 	if len(args) < 2 {
+		// 'cd' to home dir
+		moveTo = "~"
+	} else {
+		moveTo = args[1]
+	}
+
+	switch moveTo {
+	// to old path
+	case "-":
+		moveTo = os.Getenv("OLDPWD")
+		if moveTo == "" {
+			return errors.New("cd: OLDPWD not set") // check in bash
+		}
+	// to home directory
+	case "~":
 		moveTo = os.Getenv("HOME")
-		// empty "HOME" in env
 		if moveTo == "" {
 			return errors.New("cd: HOME not set")
 		}
-	} else {
-		moveTo = args[1]
 	}
 
 	// remove last char if it's slash
@@ -116,20 +158,21 @@ func cd(args []string) error {
 		moveTo = moveTo[:len(moveTo) - 1]
 	}
 
-	// don't move if current dir is /
+	// don't move .. if current dir is /
 	if os.Getenv("PWD") == "/" && strings.Contains(moveTo, "..") {
 		return nil
 	}
 
 	// Change the directory and return the error
-	err := os.Chdir(moveTo)
+	err = os.Chdir(moveTo)
 	if err == nil {
+		// change pwd and oldpwd
 		pwd, err := os.Getwd()
 		if err != nil {
 			return errors.New("pwd error")
 		}
-		// changePWDInENV(moveTo)
 		os.Setenv("PWD", pwd)
+		os.Setenv("OLDPWD", prevPed)
 	}
 	return err
 }
