@@ -1,11 +1,13 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
 	"sort"
 	"strings"
 )
@@ -39,6 +41,7 @@ type flags struct {
 	r bool
 	u bool
 	c bool
+	b bool
 }
 
 func main() {
@@ -46,13 +49,14 @@ func main() {
 	flag.BoolVar(&flags.r, "r", false, "reverse sort")
 	flag.BoolVar(&flags.u, "u", false, "write only unique strings")
 	flag.BoolVar(&flags.c, "c", false, "is file sorted")
+	flag.BoolVar(&flags.b, "b", false, "ignore blanks")
 	flag.Parse()
 
 	args := flag.Args()
 	if len(args) < 1 {
-		log.Fatal("mus't be at lest 1 argument")
+		log.Fatal("mus't be at least 1 argument")
 	}
-	// если есть флаг с проверяется только первый файл
+	// если есть флаг с проверяется только первый файл, остальные игнорируются
 	if flags.c {
 		args = args[:1]
 	}
@@ -65,33 +69,79 @@ func main() {
 	}
 
 	// TODO goruitne
-	data = sortFile(flags, data)
-	writeSTDOUT(data)
-
+	data, err = sortFile(flags, data)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		writeSTDOUT(data)
+	}
 }
 
-func sortFile(flags flags, data []string) []string {
-	// just check
+func sortFile(flags flags, data []string) ([]string, error) {
+
 	if flags.c {
-		// -c -r
-		// просто отсортировать массив по нужным ключам и сравнить
-		isSorted := sort.IsSorted(sort.StringSlice(data))
-		if !isSorted {
-			fmt.Println("disorder")
-		}
-		return []string{}
+		// data, err := flagC(data)
+		return nil, flagC(flags, data)
 	}
 
-	sort.Strings(data)
+	return sortWithFlags(flags, data), nil
 
+	// return data
+}
+
+// return error if data is not sorted
+func flagC(flags flags, data []string) error {
+	// just check
+	// -c -r
+
+
+	// cretate new slice with data
+	sortedData := make([]string, len(data))
+	copy(sortedData, data)
+	// sort new slice with flags
+	sortedData = sortWithFlags(flags, sortedData)
+
+	// compare sorted slice with data slice
+	// if false - data is not sorted with flags
+	if !reflect.DeepEqual(data, sortedData) {
+		return errors.New("disorder")
+	}
+
+	return nil
+}
+
+func sortWithFlags(flags flags, dataToSort []string) []string {
+	sort.Strings(dataToSort)
+
+	if flags.b {
+		sort.Slice(dataToSort, func(i, j int) bool {
+			dataI := strings.TrimSpace(dataToSort[i])
+			dataJ := strings.TrimSpace(dataToSort[j])
+			return dataI < dataJ
+		})
+		// return dataToSort
+	}
+	
 	if flags.r {
-		sort.Sort(sort.Reverse(sort.StringSlice(data)))
-	}
-	if flags.u {
-		data = removeDuplicateStr(data)
+
+		sort.Slice(dataToSort, func(i, j int) bool {
+
+			if flags.b {
+				dataI := strings.TrimSpace(dataToSort[i])
+				dataJ := strings.TrimSpace(dataToSort[j])
+				return !(dataI < dataJ)
+			}
+			return !(dataToSort[i] < dataToSort[j])
+		})
+		// sort.Sort(sort.Reverse(sort.StringSlice(dataToSort)))
 	}
 
-	return data
+
+	/// TODO -u -b
+	if flags.u {
+		dataToSort = removeDuplicateStr(dataToSort, flags.b)
+	}
+	return dataToSort
 }
 
 func openFiles(args []string) []*os.File {
@@ -132,10 +182,14 @@ func writeSTDOUT(data []string) {
 	}
 }
 
-func removeDuplicateStr(strSlice []string) []string {
+func removeDuplicateStr(strSlice []string, ignoreBlanks bool) []string {
 	allKeys := make(map[string]bool)
 	list := []string{}
+
 	for _, item := range strSlice {
+		// if ignoreBlanks {
+		// 	item = strings.TrimSpace(item)
+		// }
 		if _, value := allKeys[item]; !value {
 			allKeys[item] = true
 			list = append(list, item)
