@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strings"
+)
+
 /*
 === Поиск анаграмм по словарю ===
 
@@ -20,5 +25,14 @@ package main
 */
 
 func main() {
+	in := []string{"Пятак", "актяп", "тяпка", "тяпка"}
+	in = toLowRegister(in)
+	fmt.Println()
+}
 
+func toLowRegister(arr []string) []string {
+	for i := range arr {
+		arr[i] = strings.ToLower(arr[i])
+	}
+	return arr
 }
