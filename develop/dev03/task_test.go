@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConvert(t *testing.T) {
+func TestSort(t *testing.T) {
 	testCases := []struct {
 		name	string
 		flags	flags
