@@ -56,7 +56,7 @@ func main() {
 	if len(args) < 1 {
 		log.Fatal("mus't be at least 1 argument")
 	}
-	// если есть флаг с проверяется только первый файл, остальные игнорируются
+	// если есть флаг -с проверяется только первый файл, остальные игнорируются
 	if flags.c {
 		args = args[:1]
 	}
@@ -65,35 +65,33 @@ func main() {
 	// get strings from all files
 	data, err := getFilesData(files)
 	if err != nil {
-		log.Fatal("mus't be at lest 1 argument")
+		log.Fatal("mus't be at least 1 argument")
 	}
 
 	// TODO goruitne
 	data, err = sortFile(flags, data)
 	if err != nil {
 		fmt.Println(err)
-	} else {
-		writeSTDOUT(data)
+		return
 	}
+	writeSTDOUT(data)
 }
 
+// return error if flag c and array not sorted
 func sortFile(flags flags, data []string) ([]string, error) {
 
+	// just check is file sorted, not sort
 	if flags.c {
-		// data, err := flagC(data)
 		return nil, flagC(flags, data)
 	}
 
 	return sortWithFlags(flags, data), nil
-
-	// return data
 }
 
 // return error if data is not sorted
 func flagC(flags flags, data []string) error {
 	// just check
 	// -c -r
-
 
 	// cretate new slice with data
 	sortedData := make([]string, len(data))
@@ -111,8 +109,11 @@ func flagC(flags flags, data []string) error {
 }
 
 func sortWithFlags(flags flags, dataToSort []string) []string {
-	sort.Strings(dataToSort)
+	if !flags.b && !flags.r {
+		sort.Strings(dataToSort)
+	}
 
+	// ignore blanks
 	if flags.b {
 		sort.Slice(dataToSort, func(i, j int) bool {
 			dataI := strings.TrimSpace(dataToSort[i])
@@ -122,10 +123,9 @@ func sortWithFlags(flags flags, dataToSort []string) []string {
 		// return dataToSort
 	}
 	
+	// reverse sort
 	if flags.r {
-
 		sort.Slice(dataToSort, func(i, j int) bool {
-
 			if flags.b {
 				dataI := strings.TrimSpace(dataToSort[i])
 				dataJ := strings.TrimSpace(dataToSort[j])
@@ -138,8 +138,10 @@ func sortWithFlags(flags flags, dataToSort []string) []string {
 
 
 	/// TODO -u -b
+	// only unique strings
 	if flags.u {
 		dataToSort = removeDuplicateStr(dataToSort, flags.b)
+
 	}
 	return dataToSort
 }
@@ -175,25 +177,40 @@ func getFilesData(files []*os.File) ([]string, error) {
 	return data, nil
 }
 
+func removeDuplicateStr(strSlice []string, ignoreBlanks bool) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+
+	// for _, item := range strSlice {
+	for i := 0; i < len(strSlice); i++ {
+		item := strSlice[i]
+		
+		// если такого элемента нет в мапе - добавляем
+		// если флаг -b то должны еще проверить с пробелами
+		if _, value := allKeys[item]; !value {
+			isAppend := true
+
+			if ignoreBlanks {
+				itemWithoutSpaces := strings.TrimSpace(item)
+				for key := range allKeys {
+					if strings.TrimSpace(key) == itemWithoutSpaces {
+						isAppend = false
+					}
+				}
+			}
+
+			if isAppend {
+				allKeys[item] = true
+				list = append(list, item)
+			}
+		}
+	}
+	return list
+}
+
 // write to standard output
 func writeSTDOUT(data []string) {
 	for _, str := range data {
 		fmt.Println(str)
 	}
-}
-
-func removeDuplicateStr(strSlice []string, ignoreBlanks bool) []string {
-	allKeys := make(map[string]bool)
-	list := []string{}
-
-	for _, item := range strSlice {
-		// if ignoreBlanks {
-		// 	item = strings.TrimSpace(item)
-		// }
-		if _, value := allKeys[item]; !value {
-			allKeys[item] = true
-			list = append(list, item)
-		}
-	}
-	return list
 }

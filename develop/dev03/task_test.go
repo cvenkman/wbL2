@@ -18,8 +18,8 @@ func TestConvert(t *testing.T) {
 		{
 			name:  "simple sort (without flags)",
 			flags: flags{},
-			in:    []string{"c", "a", "d", "b"},
-			out:   []string{"a", "b", "c", "d"},
+			in:    []string{"c", "a", "\n","d", "b"},
+			out:   []string{"\n", "a", "b", "c", "d"},
 			err:   nil,
 		},
 		{
@@ -117,10 +117,17 @@ func TestConvert(t *testing.T) {
 			err:   nil,
 		},
 		{
-			name:  "ignore leading blanks and onle unisue (-b -u)",
-			flags: flags{b: true, r: true},
-			in:    []string{"a", " b", "c", "d"},
-			out:   []string{"d", "c", " b", "a"},
+			name:  "ignore leading blanks and only unique (-b -u)",
+			flags: flags{b: true, u: true},
+			in:    []string{"a", "a", "c", "a", "d"},
+			out:   []string{"a", "c", "d"},
+			err:   nil,
+		},
+		{
+			name:  "hard ignore leading blanks and only unique (-b -u)",
+			flags: flags{b: true, u: true},
+			in:    []string{"a", "a", "  a", "a", "b", "g", "daaf", "a", "c", " d", "d"},
+			out:   []string{"a", "b", "c", " d", "daaf", "g"},
 			err:   nil,
 		},
 	}
