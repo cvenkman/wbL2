@@ -25,10 +25,77 @@ import (
 */
 
 func main() {
-	in := []string{"Пятак", "актяп", "тяпка", "тяпка"}
+	in := []string{"Пятак", "листок", "пятка", "листок", "тяпка", "слиток", "столик", "кот"}
 	in = toLowRegister(in)
-	fmt.Println()
+	m := search(in)
+	fmt.Println(m)
 }
+
+func search(dict []string) map[string][]string {
+	res := make(map[string][]string)
+
+	for _, el := range dict {
+		// флаг становится true если мы добавляем el в массив уже существующего ключа
+		isAdded := false
+
+		// проходимся по ключам и смотрим является ли какой-то ключ анаграммой el
+		for key := range res {
+			if isAnagram(el, key) {
+				res[key] = append(res[key], el)
+				fmt.Println(el, key, res[key])
+				isAdded = true
+				break
+			}
+		}
+
+		// если флаг false - создаем и добавляем пустой массив в новый ключ
+		if isAdded == false {
+			// если элемента нет
+			arrTmp := make([]string, 0)
+			res[el] = arrTmp
+		}
+	}
+
+	// проходимся по мапе и удаляем массивы с длиной 0
+	for key, arr := range res {
+		if len(arr) < 1 {
+			delete(res, key)
+		}
+	}
+	return res
+}
+
+// https://golangbyexample.com/check-two-strings-anagram-go/
+
+func isAnagram(s string, t string) bool {
+	// если слова одинаковые
+	if s == t {
+		return false
+	}
+	lenS := len(s)
+	lenT := len(t)
+	if lenS != lenT {
+		return false
+	}
+
+	anagramMap := make(map[string]int)
+
+	for i := 0; i < lenS; i++ {
+		anagramMap[string(s[i])]++
+	}
+	for i := 0; i < lenT; i++ {
+		anagramMap[string(t[i])]--
+	}
+
+	for i := 0; i < lenS; i++ {
+		if anagramMap[string(s[i])] != 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 
 func toLowRegister(arr []string) []string {
 	for i := range arr {
