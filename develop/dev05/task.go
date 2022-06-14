@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 )
@@ -27,61 +28,117 @@ import (
 */
 
 type flags struct {
-	b bool
+	B bool
+	A bool
+	C bool
+	c bool
+	i bool
+	n bool
 }
 
 // type results struct
 
+
 type result struct {
-	before int
+	lenBefore int
+	lenAfter int
+	lenContext int
+	strNumber int
 	found string
+}
+
+type Data struct {
+	fileName string
+	strs []string
+	toSerach string
 }
 
 func main() {
 	flags := flags{}
-	flag.BoolVar(&flags.b, "b", false, "reverse sort")
+	flag.BoolVar(&flags.B, "B", false, "reverse sort")
+	flag.BoolVar(&flags.A, "A", false, "reverse sort")
+	flag.BoolVar(&flags.C, "C", false, "reverse sort")
+	flag.BoolVar(&flags.c, "c", false, "reverse sort")
+	flag.BoolVar(&flags.i, "i", false, "reverse sort")
+	flag.BoolVar(&flags.n, "n", false, "reverse sort")
 	flag.Parse()
-	args := flag.Args()
-	
-	toSerach := args[0]
-	
-	args = args[1:]
-	
-	// fmt.Println(args, toSerach)
 
-	for _, arg := range args {
-		file, err := os.Open(arg)
+	if flag.NArg() < 2 {
+		log.Fatal("err args: grep [OPTIONS] PATTERN [FILE...]")
+	}
+
+	args := flag.Args()
+	toSerach := args[0]	
+	args = args[1:]
+
+	// цикл по файлам
+	for _, fileName := range args {
+		file, err := os.Open(fileName)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "grep: ", err)
 			continue
 		}
-		data, err := getFileData(file)
+		fileData := Data{}
+		fileData.strs, err = getFileData(file)
 		if err != nil {
 			fmt.Fprint(os.Stderr, "grep: ", err)
+			continue
 		}
-		
-		// получаем массив структур с найденными словами из файла
-		res := search(data, toSerach, flags)
-		// fmt.Println(res)
-		for _, el := range res {
-			if flags.b {
-				fmt.Printf("%s:%d: %s\n", file.Name(), el.before, el.found)
-			} else {
-				fmt.Printf("%s: %s\n", file.Name(), el.found)
-			}
+		fileData.fileName = file.Name()
+		fileData.toSerach = toSerach
+
+		results := makeOutput(fileData, flags)
+		for _, res := range results {
+			fmt.Println(res)
 		}
 	}
 
 }
 
-func search(data []string, toSerach string, flags flags) []result {
+// возвращает массив со строками на вывод
+func makeOutput(data Data, flags flags) []string {
+	// получаем массив структур с найденными словами из файла
+	results := search(data, flags)
+	
+	// структура с выводом
+	out := make([]string, 0)
+
+	// сохраняем только количество строк
+	if flags.c {
+		out = append(out, fmt.Sprintf("%s: %d", data.fileName, len(results)))
+		return out
+	}
+
+	// сохраняем все результаты из одного файла
+	for _, result := range results {
+		if flags.B {
+			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenBefore, result.found))
+		} else if flags.A {
+			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter, result.found))
+		} else if flags.C {
+			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter + result.lenBefore, result.found))
+		} else if flags.n {
+			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.strNumber, result.found))
+		} else {
+			out = append(out, fmt.Sprintf("%s: %s", data.fileName, result.found))
+		}
+	}
+	return out
+}
+
+// возвращает массив со сторокой где найдено слова и значниями для флага
+func search(data Data, flags flags) []result {
 	res := make([]result, 0)
 	i := 0
 
 	// идем по массиву строк из файла
-	for _, str := range data {
-		if strings.Contains(str, toSerach) {
-			res1 := result{before: i, found: str}
+	for j, str := range data.strs {
+		if flags.i {
+			str = strings.ToLower(str)
+		}
+		if strings.Contains(str, data.toSerach) {
+			l := getFileDataLen(data.strs) - i - len(data.strs[j])
+			res1 := result{lenBefore: i, found: data.strs[j], lenAfter: l, strNumber: j + 1}
 			res = append(res, res1)
 		}
 		// видимо включая \0
@@ -102,4 +159,12 @@ func getFileData(file *os.File) ([]string, error) {
 
 	// split file
 	return strings.Split(string(data), "\n"), nil
+}
+
+func getFileDataLen(data []string) int {
+	l := 0
+	for _, str := range data {
+		l += len(str) + 1
+	}
+	return l - 1
 }
