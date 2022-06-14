@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -25,13 +26,14 @@ import (
 */
 
 func main() {
-	in := []string{"Пятак", "листок", "пятка", "листок", "тяпка", "слиток", "столик", "кот"}
-	in = toLowRegister(in)
+	in := []string{"Пятак", "листок", "тяпка", "листок", "пятка", "слиток", "столик", "кот"}
 	m := search(in)
 	fmt.Println(m)
 }
 
 func search(dict []string) map[string][]string {
+	dict = toLowRegister(dict)
+
 	res := make(map[string][]string)
 
 	for _, el := range dict {
@@ -42,7 +44,6 @@ func search(dict []string) map[string][]string {
 		for key := range res {
 			if isAnagram(el, key) {
 				res[key] = append(res[key], el)
-				fmt.Println(el, key, res[key])
 				isAdded = true
 				break
 			}
@@ -61,7 +62,16 @@ func search(dict []string) map[string][]string {
 		if len(arr) < 1 {
 			delete(res, key)
 		}
+		// сортируем массив
+		sort.Sort(sort.StringSlice(res[key]))
 	}
+
+	// for key, arr := range res {
+	// 	if len(arr) < 1 {
+	// 		delete(res, key)
+	// 	}
+	// 	sort.Sort(sort.StringSlice(arr))
+	// }
 	return res
 }
 
