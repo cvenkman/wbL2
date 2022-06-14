@@ -34,22 +34,22 @@ type flags struct {
 	c bool
 	i bool
 	n bool
+	v bool
 }
 
 // type results struct
 
-
 type result struct {
-	lenBefore int
-	lenAfter int
+	lenBefore  int
+	lenAfter   int
 	lenContext int
-	strNumber int
-	found string
+	strNumber  int
+	found      string
 }
 
 type Data struct {
 	fileName string
-	strs []string
+	strs     []string
 	toSerach string
 }
 
@@ -58,9 +58,10 @@ func main() {
 	flag.BoolVar(&flags.B, "B", false, "reverse sort")
 	flag.BoolVar(&flags.A, "A", false, "reverse sort")
 	flag.BoolVar(&flags.C, "C", false, "reverse sort")
-	flag.BoolVar(&flags.c, "c", false, "reverse sort")
-	flag.BoolVar(&flags.i, "i", false, "reverse sort")
-	flag.BoolVar(&flags.n, "n", false, "reverse sort")
+	flag.BoolVar(&flags.c, "c", false, "Prints only a count of the lines that contain the pattern.")
+	flag.BoolVar(&flags.i, "i", false, "Ignores upper/lower case distinction during comparisons.")
+	flag.BoolVar(&flags.n, "n", false, "Precedes each line by its line number in the file.")
+	flag.BoolVar(&flags.v, "v", false, "Prints all lines except those that contain the pattern")
 	flag.Parse()
 
 	if flag.NArg() < 2 {
@@ -68,7 +69,7 @@ func main() {
 	}
 
 	args := flag.Args()
-	toSerach := args[0]	
+	toSerach := args[0]
 	args = args[1:]
 
 	// цикл по файлам
@@ -99,7 +100,7 @@ func main() {
 func makeOutput(data Data, flags flags) []string {
 	// получаем массив структур с найденными словами из файла
 	results := search(data, flags)
-	
+
 	// структура с выводом
 	out := make([]string, 0)
 
@@ -116,7 +117,7 @@ func makeOutput(data Data, flags flags) []string {
 		} else if flags.A {
 			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter, result.found))
 		} else if flags.C {
-			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter + result.lenBefore, result.found))
+			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter+result.lenBefore, result.found))
 		} else if flags.n {
 			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.strNumber, result.found))
 		} else {
@@ -136,7 +137,9 @@ func search(data Data, flags flags) []result {
 		if flags.i {
 			str = strings.ToLower(str)
 		}
-		if strings.Contains(str, data.toSerach) {
+		if (strings.Contains(str, data.toSerach) && !flags.v) ||
+			(flags.v && !strings.Contains(str, data.toSerach)) {
+
 			l := getFileDataLen(data.strs) - i - len(data.strs[j])
 			res1 := result{lenBefore: i, found: data.strs[j], lenAfter: l, strNumber: j + 1}
 			res = append(res, res1)
