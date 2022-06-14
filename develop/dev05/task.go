@@ -106,23 +106,33 @@ func makeOutput(data Data, flags flags) []string {
 
 	// сохраняем только количество строк
 	if flags.c {
-		out = append(out, fmt.Sprintf("%s: %d", data.fileName, len(results)))
+		out = append(out, fmt.Sprintf("%s:%d", data.fileName, len(results)))
 		return out
 	}
 
 	// сохраняем все результаты из одного файла
 	for _, result := range results {
-		if flags.B {
-			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenBefore, result.found))
-		} else if flags.A {
-			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter, result.found))
-		} else if flags.C {
-			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter+result.lenBefore, result.found))
-		} else if flags.n {
-			out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.strNumber, result.found))
-		} else {
-			out = append(out, fmt.Sprintf("%s: %s", data.fileName, result.found))
+		str := data.fileName + ":"
+
+		if flags.n {
+			str += fmt.Sprintf("%d:", result.strNumber)
+			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.strNumber, result.found))
 		}
+		if flags.B {
+			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenBefore, result.found))
+			str += fmt.Sprintf("%d:", result.lenBefore)
+		}
+		if flags.A {
+			str += fmt.Sprintf("%d:", result.lenAfter)
+			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter, result.found))
+		}
+		if flags.C {
+			str += fmt.Sprintf("%d:", result.lenBefore + result.lenAfter)
+			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter+result.lenBefore, result.found))
+		}
+
+		str += result.found
+		out = append(out, str)
 	}
 	return out
 }
