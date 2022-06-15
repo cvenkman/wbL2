@@ -31,19 +31,26 @@ func main() {
 	fmt.Println(m)
 }
 
+// принимает массив со словами
+// возврашает мапу, где:
+// Ключ - первое встретившееся в словаре слово из множества
+// Значение - ссылка на массив, каждый элемент которого, слово из множества
 func search(dict []string) map[string][]string {
+	// приводим словарь с нижнему регистру
 	dict = toLowRegister(dict)
 
+	// мапа множества анаграмм
 	res := make(map[string][]string)
 
-	for _, el := range dict {
-		// флаг становится true если мы добавляем el в массив уже существующего ключа
+	for _, word := range dict {
+		// флаг становится true если мы добавляем word в массив уже существующего ключа
 		isAdded := false
 
-		// проходимся по ключам и смотрим является ли какой-то ключ анаграммой el
+		// проходимся по ключам и смотрим является ли какой-то ключ анаграммой word
 		for key := range res {
-			if isAnagram(el, key) {
-				res[key] = append(res[key], el)
+			if isAnagram(key, word) {
+				// если является - добавляем word в массив res[key]
+				res[key] = append(res[key], word)
 				isAdded = true
 				break
 			}
@@ -52,8 +59,7 @@ func search(dict []string) map[string][]string {
 		// если флаг false - создаем и добавляем пустой массив в новый ключ
 		if isAdded == false {
 			// если элемента нет
-			arrTmp := make([]string, 0)
-			res[el] = arrTmp
+			res[word] = make([]string, 0)
 		}
 	}
 
@@ -65,13 +71,6 @@ func search(dict []string) map[string][]string {
 		// сортируем массив
 		sort.Sort(sort.StringSlice(res[key]))
 	}
-
-	// for key, arr := range res {
-	// 	if len(arr) < 1 {
-	// 		delete(res, key)
-	// 	}
-	// 	sort.Sort(sort.StringSlice(arr))
-	// }
 	return res
 }
 

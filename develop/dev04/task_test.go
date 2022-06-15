@@ -27,6 +27,11 @@ func TestConvert(t *testing.T) {
 			in: []string{"тяПкА", "ПяТак"},
 			out: map[string][]string{"тяпка": {"пятак"}},
 		},
+		{
+			name: "4",
+			in: []string{},
+			out: map[string][]string{},
+		},
 	}
 
 	for _, testCase := range testCases {
