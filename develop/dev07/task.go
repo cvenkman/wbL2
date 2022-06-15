@@ -66,9 +66,9 @@ func or(channels ...<- chan interface{}) <- chan interface{} {
 	// канал со всеми done каналами
 	doneChannels := make(chan interface{})
 
-	for _, chan := range channels {
+	// for _, chan := range channels {
 
-	}
+	// }
 
 	return doneChannels
 }
