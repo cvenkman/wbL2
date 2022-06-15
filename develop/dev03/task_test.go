@@ -130,6 +130,42 @@ func TestSort(t *testing.T) {
 			out:   []string{"a", "b", "c", " d", "daaf", "g"},
 			err:   nil,
 		},
+		{
+			name:  "-k=3",
+			flags: flags{k: 4},
+			in:    []string{"bbba", "a", "vvvb", "vfar", "bbbab"},
+			out:   []string{"a", "bbba", "bbbab", "vvvb", "vfar"},
+			err:   nil,
+		},
+		{
+			name:  "-k=3 -r",
+			flags: flags{k: 4, r: true},
+			in:    []string{"bbba", "a", "vvvb", "bbbab"},
+			out:   []string{"vvvb", "bbbab", "bbba", "a"},
+			err:   nil,
+		},
+		{
+			name:  "-n",
+			flags: flags{},
+			in:    []string{"11", "01", "12", "r", "111n", "c10", "a0000", "0000", "bb"},
+			out:   []string{"0000", "11.1", "01", "11", "11.1", "111n", "12", "a0000", "bb", "c10", "r"},
+			err:   nil,
+		},
+		// {
+		// 	name:  "-n",
+		// 	flags: flags{},
+		// 	in:    []string{"11", "01", "12", "1111", "10", "0000"},
+		// 	out:   []string{"0000", "01", "10", "11", "12"},
+		// 	err:   nil,
+		// },
+
+		// {
+		// 	name:  "-n",
+		// 	flags: flags{n: true},
+		// 	in:    []string{"11", "01", "12", "r", "11n", "111n", "c10", "a0000", "0000", "bb"},
+		// 	out:   []string{"0000", "a0000", "bb", "c10", "r", "01", "11", "11n", "12", "111n"},
+		// 	err:   nil,
+		// },
 	}
 
 	for _, testCase := range testCases {

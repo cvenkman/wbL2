@@ -8,7 +8,9 @@ import (
 	"log"
 	"os"
 	"reflect"
+	// "regexp"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -38,10 +40,12 @@ import (
 */
 
 type flags struct {
+	k int
 	r bool
 	u bool
 	c bool
 	b bool
+	n bool
 }
 
 func main() {
@@ -50,6 +54,8 @@ func main() {
 	flag.BoolVar(&flags.u, "u", false, "write only unique strings")
 	flag.BoolVar(&flags.c, "c", false, "is file sorted")
 	flag.BoolVar(&flags.b, "b", false, "ignore blanks")
+	flag.BoolVar(&flags.n, "n", false, "ignore blanks")
+	flag.IntVar(&flags.k, "k", 0, "-key=POS: sort at position POS, POS starts from 1")
 	flag.Parse()
 
 	args := flag.Args()
@@ -118,11 +124,81 @@ func sortWithFlags(flags flags, dataToSort []string) []string {
 		sort.Slice(dataToSort, func(i, j int) bool {
 			dataI := strings.TrimSpace(dataToSort[i])
 			dataJ := strings.TrimSpace(dataToSort[j])
+			// если dataI больше - меняем местами
 			return dataI < dataJ
 		})
-		// return dataToSort
 	}
 	
+	if flags.k > 0 {
+		sort.Slice(dataToSort, func(i int, j int) bool {
+			if len(dataToSort[i]) < flags.k ||
+				len(dataToSort[j]) < flags.k {
+				return false
+			}
+			return dataToSort[i][flags.k - 1] < dataToSort[j][flags.k - 1]
+		})
+	}
+
+	if flags.n {
+		// r := regexp.MustCompile(`[^0-9]+|[0-9]+`)
+		// fmt.Println("-", r.)
+
+		sort.Slice(dataToSort, func(i, j int) bool {
+			if dataToSort[i] == "" || dataToSort[j] == "" {
+				return true
+			}
+
+			dataI := ""
+			dataJ := ""
+
+			if isNumber(dataToSort[i][0]) {
+				tmpI := make([]byte, 1)
+				for q := 0; q < len(dataToSort[i]) && isNumber(dataToSort[i][q]); q++ {
+					tmpI = append(tmpI, dataToSort[i][q])
+				}
+				dataI = string(tmpI)
+			// fmt.Println("-", dataToSort[i], dataI)
+
+			}
+			if isNumber(dataToSort[j][0]) {
+				tmpJ := make([]byte, 1)
+				for q := 0;  q < len(dataToSort[j]) && isNumber(dataToSort[j][q]); q++ {
+					tmpJ = append(tmpJ, dataToSort[j][q])
+				}
+				dataJ = string(tmpJ)
+			// fmt.Println("+", dataToSort[j], dataJ)
+
+			}
+
+			if dataI == "" {
+				dataI = dataToSort[i]
+			}
+			if dataJ == "" {
+				dataJ = dataToSort[j]
+			}
+
+			
+			fmt.Println("-", dataI, dataJ)
+			val1, err1 := strconv.ParseFloat(dataI, 64) // переводим первую строку в число
+			val2, err2 := strconv.ParseFloat(dataJ, 64) // переводим вторую строку в число
+			if err1 != nil && err2 != nil {
+				return dataI[0] < dataJ[0]
+			}
+			fmt.Println("+")
+			
+			if err1 != nil {
+				// fmt.Println("Error: ", error)
+				return true
+			}
+			if err2 != nil {
+				// fmt.Println("Error: ", err)
+				return true
+			}
+			// fmt.Println(val1, val2)
+			return val1 < val2
+		})
+	}
+
 	// reverse sort
 	if flags.r {
 		sort.Slice(dataToSort, func(i, j int) bool {
@@ -133,7 +209,6 @@ func sortWithFlags(flags flags, dataToSort []string) []string {
 			}
 			return !(dataToSort[i] < dataToSort[j])
 		})
-		// sort.Sort(sort.Reverse(sort.StringSlice(dataToSort)))
 	}
 
 
@@ -144,6 +219,10 @@ func sortWithFlags(flags flags, dataToSort []string) []string {
 
 	}
 	return dataToSort
+}
+
+func isNumber(input uint8) bool {
+	return input >= '0' && input <= '9'
 }
 
 func openFiles(args []string) []*os.File {
