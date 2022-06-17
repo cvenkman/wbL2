@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
-
+	// "syscall"
 )
+
 //echo $USER | cat -e
 //echo "dddd" | cat -e
 //ls | pwd
@@ -143,7 +145,7 @@ func exeCmd(args []string) error {
 	// 	return echo(args, false)
 	// }
 
-	var cmd *exec.Cmd
+	// var cmd *exec.Cmd
 	var err error
 
 	if args[0] == "cd" {
@@ -158,15 +160,78 @@ func exeCmd(args []string) error {
 
 	//Exec executes binary files
 	// Pass the program and the arguments separately
-	cmd = exec.Command(args[0], args[1:]...)
+	// cmd = exec.Command(args[0], args[1:]...)
 
-	// Set the correct output device
+	// // Set the correct output device
+	// cmd.Stderr = os.Stderr
+	// cmd.Stdout = os.Stdout
+
+	// Execute the command and return the error
+	// err = cmd.Run()
+
+
+
+	binary, lookErr := exec.LookPath(args[0])
+	fmt.Println("--", binary)
+	if lookErr != nil {
+		log.Fatal(lookErr)
+	}
+	// env := os.Environ()
+
+	// ar := []string{a}
+
+	// the execution of our process will end here and be replaced by the /bin/ls -a -l -h process.
+	// execErr := syscall.Exec(binary, args, env)
+	// if execErr != nil {
+	// 	log.Fatal(execErr)
+	// }
+
+	fmt.Println("--", binary)
+	cm := exec.Command(binary, args...)
+	cm.Stderr = os.Stderr
+	cm.Stdout = os.Stdout
+	cm.Run()
+
+
+
+
+	
+	// cm.Start()
+	// cm.Stderr = os.Stderr
+	// cm.Stdout = os.Stdout
+	// cm.Wait()
+
+	// id, _, errno := syscall.Syscall(syscall.SYS_FORK, 0, 0, 0)
+	// if errno != 0 {
+	// 	os.Exit(1)
+	// }
+	// if id == 0 {
+	// 	fmt.Println("---", args)
+	// 	cmd := exec.Command(args[0], args[1:]...)
+
+	// 	cmd.Stderr = os.Stderr
+	// 	cmd.Stdout = os.Stdout
+	
+	// 	err := cmd.Run()
+	// 	// err := execInputq(args)
+		
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	os.Exit(0)
+	// }
+	
+
+	return nil
+}
+// execInput - вызов команды переданной в инпуте
+func execInputq(args []string) error {
+	cmd := exec.Command(args[0], args[1:]...)
+
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 
-	// Execute the command and return the error
-	err = cmd.Run()
-	return err
+	return cmd.Run()
 }
 
 
