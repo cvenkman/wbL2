@@ -90,6 +90,7 @@ func searchResult(inputLine, delim string, fields []int, isWihtoutDelim bool) (r
 func printResult(writer io.Writer, result []string) {
 	if len(result) == 0 {
 		return
+
 	}
 	for i, str := range result {
 		fmt.Fprint(writer, str)
