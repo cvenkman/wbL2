@@ -17,11 +17,11 @@
 develop
 
               01
-              02
+              02    дополнительно - escape
          03         sort - дополнительные флаги -h -M
               04
          05         grep - флаг F fixed
-06                  cut
+     06             cut - сделать тесты
 07                  Or channel
      08             shell - fork/exec и nc
 09                  wget
@@ -29,3 +29,4 @@ develop
 11                  HTTP сервер для работы с календарем
 
 
+https://habr.com/ru/post/457970/
