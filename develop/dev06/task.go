@@ -33,15 +33,20 @@ import (
 Note: Space is not considered as delimiter in UNIX.
 */
 
+// type data struct {
+// 	inputLine string
+
+// }
+
 func main() {
-	// var lines []string
 	var field string
 	var delim string
-	var printWihtoutDelim bool
+	var isWihtoutDelim bool
 	flag.StringVar(&field, "f", "", "select only these fields; also print any line that contains no delimiter character, unless the -s option is specified")
 	flag.StringVar(&delim, "d", "\t", "use DELIM instead of TAB for field delimiter")
-	flag.BoolVar(&printWihtoutDelim, "s", false, "do not print lines not containing delimiters")
+	flag.BoolVar(&isWihtoutDelim, "s", false, "do not print lines not containing delimiters")
 	flag.Parse()
+
 	if field == "" {
 		log.Fatal("usage: cut -f list [-s] [-d delim] [file ...]")
 	}
@@ -51,27 +56,31 @@ func main() {
 
 	writer := os.Stdin
 
+	// какие колонки выводить
 	fields := parseFiled(field)
 
 	scanner := bufio.NewScanner(writer)
-	// добавляем введеные строки в масив linesArr
 	for scanner.Scan() {
-		line := scanner.Text()
+		inputLine := scanner.Text()
 
-		res := searchResult(line, delim, fields)
+		res := searchResult(inputLine, delim, fields, isWihtoutDelim)
 		printResult(writer, res)
 	}
-
 }
 
-func searchResult(line, delim string, fields []int) (res []string) {
-	lines := strings.Split(line, delim)
+// FIXME arguments
+func searchResult(inputLine, delim string, fields []int, isWihtoutDelim bool) (res []string) {
+	if isWihtoutDelim && !strings.Contains(inputLine, delim) {
+		return
+	}
 	res = make([]string, 0)
+	lines := strings.Split(inputLine, delim)
+	// массив со строками для результата
 
 	for _, field := range fields {
 		field--
 		if field < len(lines) {
-			// массив со строками для результата
+			// добавляем введеные строки в данной колонке в масив res
 			res = append(res, lines[field])
 		}
 	}
@@ -79,6 +88,9 @@ func searchResult(line, delim string, fields []int) (res []string) {
 }
 
 func printResult(writer io.Writer, result []string) {
+	if len(result) == 0 {
+		return
+	}
 	for i, str := range result {
 		fmt.Fprint(writer, str)
 		if i < len(result)-1 {
@@ -99,7 +111,7 @@ func parseFiled(field string) []int {
 		} else if number == 0 {
 			log.Fatal("cut: [-f] list: values may not include zero")
 		}
-		// FIXME не добавляем если такое число уже есть
+		// не добавляем если такое число уже есть
 		for _, el := range fields {
 			if number == el {
 				continue
