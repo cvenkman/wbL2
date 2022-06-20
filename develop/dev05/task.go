@@ -28,13 +28,13 @@ import (
 */
 
 type flags struct {
-	B bool
 	A bool
+	B bool
 	C bool
 	c bool
 	i bool
-	n bool
 	v bool
+	n bool
 }
 
 // type results struct

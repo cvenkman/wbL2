@@ -41,11 +41,12 @@ import (
 
 type flags struct {
 	k int
+	n bool
 	r bool
 	u bool
+	
 	c bool
 	b bool
-	n bool
 }
 
 func main() {
