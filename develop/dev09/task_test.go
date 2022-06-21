@@ -23,7 +23,7 @@ func TestConvert(t *testing.T) {
 		err:  nil,
 	}
 
-	// start server with "Hello World!" page size 12
+	// start server with "Hello World!" page (size 12)
 	go func() {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Hello World!")

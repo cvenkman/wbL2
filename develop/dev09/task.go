@@ -5,8 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	// "net/url"
 	"os"
 )
 
@@ -34,7 +32,7 @@ func main() {
 }
 
 // Wget is a free utility for non-interactive download of files from the Web.
-// returns file (response) size
+// returns file with response size
 func Wget(url string) (int64, error) {
 	fmt.Println("Downloading ", url)
 
@@ -50,7 +48,6 @@ func Wget(url string) (int64, error) {
 	}
 	fmt.Println("Response Status:", response.StatusCode)
 
-	// create file or directoey to save data
 	output := createToSave(response.Request.URL.Path)
 	defer output.Close()
 
@@ -66,15 +63,15 @@ func Wget(url string) (int64, error) {
 	return fileinfo.Size(), nil
 }
 
-// создает папку или файл для сохранения скаченных данных
+// create file or directoey to save data
 func createToSave(responsePath string) *os.File {
 	if len(responsePath) > 0 {
-		// delete first slash if directory
+		// delete first slash if responsePath is a directory
 		if responsePath[0] == '/' {
 			responsePath = responsePath[1:]
 		}
 	}
-	// response.Request.URL.Path is /
+	// create file index.html if response.Request.URL.Path is /
 	if responsePath == "" {
 		responsePath = "index.html"
 	}
