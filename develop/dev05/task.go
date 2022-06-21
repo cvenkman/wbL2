@@ -34,6 +34,7 @@ type flags struct {
 	c bool
 	i bool
 	v bool
+	F bool
 	n bool
 }
 
@@ -62,6 +63,7 @@ func main() {
 	flag.BoolVar(&flags.i, "i", false, "Ignores upper/lower case distinction during comparisons.")
 	flag.BoolVar(&flags.n, "n", false, "Precedes each line by its line number in the file.")
 	flag.BoolVar(&flags.v, "v", false, "Prints all lines except those that contain the pattern")
+	flag.BoolVar(&flags.F, "F", false, "точное совпадение со строкой, не паттерн")
 	flag.Parse()
 
 	if flag.NArg() < 2 {
@@ -127,7 +129,7 @@ func makeOutput(data Data, flags flags) []string {
 			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter, result.found))
 		}
 		if flags.C {
-			str += fmt.Sprintf("%d:", result.lenBefore + result.lenAfter)
+			str += fmt.Sprintf("%d:", result.lenBefore+result.lenAfter)
 			// out = append(out, fmt.Sprintf("%s:%d: %s", data.fileName, result.lenAfter+result.lenBefore, result.found))
 		}
 
@@ -147,9 +149,17 @@ func search(data Data, flags flags) []result {
 		if flags.i {
 			str = strings.ToLower(str)
 		}
-		if (strings.Contains(str, data.toSerach) && !flags.v) ||
-			(flags.v && !strings.Contains(str, data.toSerach)) {
-
+		var isContains bool
+		if flags.F {
+			if str == data.toSerach {
+				isContains = true
+			} else {
+				isContains = false
+			}
+		} else {
+			isContains = strings.Contains(str, data.toSerach)
+		}
+		if (isContains && !flags.v) || (flags.v && !isContains) {
 			l := getFileDataLen(data.strs) - i - len(data.strs[j])
 			res1 := result{lenBefore: i, found: data.strs[j], lenAfter: l, strNumber: j + 1}
 			res = append(res, res1)
