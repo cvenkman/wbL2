@@ -7,9 +7,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"strconv"
-
-	// "net/http"
 	"os"
 	"time"
 )
@@ -39,59 +36,61 @@ func main() {
 	flag.DurationVar(&timeout, "timeout", 10*time.Second, "timeout")
 	flag.Parse()
 
+	// get host and port
 	if flag.NArg() < 2 {
 		log.Fatal(usage)
 	}
 	host := flag.Arg(0)
 	port := flag.Arg(1)
 
-	fmt.Println(host, port, net.JoinHostPort(host, port))
+	fmt.Printf("Trying %s...\n", host)
+	connection := createConnection(host, port, timeout)
+	// close tcp connection
+	defer closeConnection(connection)
+	fmt.Println("Connected")
 
-	// connects to the address on the named network (tcp)
+	r := bufio.NewReader(os.Stdin)
+	for {
+		// save data form STDIN to data
+		data, err := r.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				// close connection and return if pressed Ctrl+D
+				closeConnection(connection)
+				return
+			}
+			fmt.Println(err)
+		}
+
+		// send (writes) data
+		_, err = fmt.Fprintf(connection, "%v", data)
+		if err != nil {
+			// if server closed connection
+			fmt.Println(err)
+			closeConnection(connection)
+			return
+		}
+	}
+}
+
+// connects to the address (host:port) on the tcp
+func createConnection(host string, port string, timeout time.Duration) net.Conn {
 	// each IP address given the time to connect
 	// JoinHostPort combines host and port into a network address of the form "host:port"
 	connection, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), timeout)
 	if err != nil {
 		// address doesn't exist
+		// exit after timeout
 		time.Sleep(time.Duration(timeout) * time.Second)
+		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	// close tcp connection
-	defer func() {
-		err := connection.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	go readOutConn(connection)
-
-	s := bufio.NewScanner(os.Stdin)
-	for s.Scan() {
-		_, err := fmt.Fprintf(connection, s.Text()+" / HTTP/1.0\r\n\r\n")
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-	}
-
+	return connection
 }
 
-func readOutConn(connection net.Conn) {
-	r := bufio.NewReader(connection)
-	for {
-		message, err := r.ReadString('\n')
-		if err == io.EOF {
-			fmt.Println("Connection closed by foreign host")
-			break
-		}
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		fmt.Print(message)
+func closeConnection(connection net.Conn) {
+	err := connection.Close()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
-
-// http://localhost:8080

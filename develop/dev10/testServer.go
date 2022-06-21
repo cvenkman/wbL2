@@ -30,7 +30,9 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
+		// close if ^C  pressed
 		signals := <-sigs
+		listener.Close()
 		cancel()
 		fmt.Println("\nServer stopped by signal: ", signals)
 		os.Exit(0)
