@@ -12,17 +12,20 @@ import (
 )
 
 // выходить по сигналу ^C
+// можно подключиться через telnet localhost 8080
 func main() {
+	addr := "localhost:8080"
+
 	_, cancel := context.WithCancel(context.Background())
 
-	fmt.Println("Starting server ...")
-	listener, err := net.Listen("tcp", "localhost:8080")
+	fmt.Println("Starting server on", addr)
+	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer listener.Close()
 
-	// handle signal
+	// handle ^C signal
 	sigs := make(chan os.Signal)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -34,6 +37,7 @@ func main() {
 	}()
 
 	for {
+		// new connection
 		conn, err := listener.Accept()
 		if err != nil {
 			conn.Close()

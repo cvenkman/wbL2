@@ -1,10 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"net"
-	"net/http"
+	"strconv"
+
+	// "net/http"
 	"os"
 	"time"
 )
@@ -27,30 +32,66 @@ go-telnet --timeout=10s host port: go-telnet mysite.ru 8080; go-telnet --timeout
 //https://www.opennet.ru/man.shtml?topic=telnet&category=1&russian=0
 //https://pkg.go.dev/net
 
+const usage = "Usage: go-telnet --timeout=10s host port"
+
 func main() {
-	var timeout int
-	flag.IntVar(&timeout, "timeout", 10, "timeout")
+	var timeout time.Duration
+	flag.DurationVar(&timeout, "timeout", 10*time.Second, "timeout")
+	flag.Parse()
 
 	if flag.NArg() < 2 {
-		fmt.Println("Usage: go-telnet --timeout=10s host port")
+		log.Fatal(usage)
 	}
 	host := flag.Arg(0)
 	port := flag.Arg(1)
 
+	fmt.Println(host, port, net.JoinHostPort(host, port))
+
 	// connects to the address on the named network (tcp)
 	// each IP address given the time to connect
 	// JoinHostPort combines host and port into a network address of the form "host:port"
-	connection, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), time.Duration(timeout)*time.Second)
+	connection, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), timeout)
 	if err != nil {
 		// address doesn't exist
 		time.Sleep(time.Duration(timeout) * time.Second)
 		os.Exit(1)
 	}
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World!")
-	})
-	http.ListenAndServe(":8080", nil)
+	// close tcp connection
+	defer func() {
+		err := connection.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	go readOutConn(connection)
+
+	s := bufio.NewScanner(os.Stdin)
+	for s.Scan() {
+		_, err := fmt.Fprintf(connection, s.Text()+" / HTTP/1.0\r\n\r\n")
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
+	}
+
+}
+
+func readOutConn(connection net.Conn) {
+	r := bufio.NewReader(connection)
+	for {
+		message, err := r.ReadString('\n')
+		if err == io.EOF {
+			fmt.Println("Connection closed by foreign host")
+			break
+		}
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		fmt.Print(message)
+	}
 }
 
 // http://localhost:8080
