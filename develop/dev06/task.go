@@ -25,7 +25,7 @@ import (
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-// test: -f=1 -d=',' - выводит 1 колонку
+// test: -f=1 -d=',' - выводит 1 колонку (John, Arthur...)
 // John,Smith,34,London
 // Arthur,Evans,21,Newport
 // b
