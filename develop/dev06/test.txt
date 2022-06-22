@@ -1,4 +1,0 @@
-John,Smith,34,London
-Arthur,Evans,21,Newport
-b
-George,Jones,32,Truro

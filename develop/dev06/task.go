@@ -25,18 +25,11 @@ import (
 Программа должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-/*
- -f (field): -c option is useful for fixed-length lines. Most unix files doesn’t have
- fixed-length lines. To extract the useful information you need to cut by fields rather than columns.
- List of the fields number specified must be separated by comma. Ranges are not described with -f option.
- cut uses tab as a default field delimiter but can also work with other delimiter by using -d option.
-Note: Space is not considered as delimiter in UNIX.
-*/
-
-// type data struct {
-// 	inputLine string
-
-// }
+// test: -f=1 -d=',' - выводит 1 колонку
+// John,Smith,34,London
+// Arthur,Evans,21,Newport
+// b
+// George,Jones,32,Truro
 
 func main() {
 	var field string
@@ -68,14 +61,13 @@ func main() {
 	}
 }
 
-// FIXME arguments
 func searchResult(inputLine, delim string, fields []int, isWihtoutDelim bool) (res []string) {
 	if isWihtoutDelim && !strings.Contains(inputLine, delim) {
 		return
 	}
+	// массив со строками для результата
 	res = make([]string, 0)
 	lines := strings.Split(inputLine, delim)
-	// массив со строками для результата
 
 	for _, field := range fields {
 		field--
@@ -90,7 +82,6 @@ func searchResult(inputLine, delim string, fields []int, isWihtoutDelim bool) (r
 func printResult(writer io.Writer, result []string) {
 	if len(result) == 0 {
 		return
-
 	}
 	for i, str := range result {
 		fmt.Fprint(writer, str)
