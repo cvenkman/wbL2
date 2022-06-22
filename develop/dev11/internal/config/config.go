@@ -23,7 +23,7 @@ type DBconfig struct {
 }
 
 // add info from config to config and db struct's
-func ReadConfig(configPath string) Config {
+func ReadConfig(configPath string) *Config {
 	data, err := ioutil.ReadFile(configPath)
 	if err != nil {
 		log.Fatal("Could not read config file:", err)
@@ -33,5 +33,5 @@ func ReadConfig(configPath string) Config {
 	if err != nil {
 		log.Fatal("Could not parse config file:", err)
 	}
-	return conf
+	return &conf
 }

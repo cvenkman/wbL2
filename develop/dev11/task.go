@@ -3,12 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/cvenkman/wbL2/develop/dev11/internal/config"
+	"github.com/cvenkman/wbL2/develop/dev11/internal/server"
 )
 
 /*
@@ -38,12 +38,15 @@ import (
 // валидация пришедших данных с /create_event и /update_event (не пустые поля, время в правльном формате)
 
 func main() {
+
 	var configPath string
 	flag.StringVar(&configPath, "conf", "configs/config.json", "path to config file")
+
 	conf := config.ReadConfig(configPath)
-	go startServer(conf)
+	serv := server.NewServer(conf)
+
+	go serv.Start()
 	fmt.Printf("Server started on http://%s:%s/\n", conf.Host, conf.Port)
-	fmt.Println(conf)
 
 	// wait Ctrl+C signal
 	// buffer of size 1 because channel used for notification of just one signal
@@ -52,22 +55,4 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 	fmt.Printf("\nClose connection...\n")
-
-	// Попытка корректного завершения
-	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
-	// done := make(chan struct{})
-	// go func() {
-	// 	for range signalChan {
-	// 		done <- struct{}{}
-	// 	}
-	// }()
-	// <-done
-}
-
-func startServer(conf config.Config) {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Привет, мир!")
-	})
-	http.ListenAndServe(fmt.Sprintf("%s:%s", conf.Host, conf.Port), nil)
 }
