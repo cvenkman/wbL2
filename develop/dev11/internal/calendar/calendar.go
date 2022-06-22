@@ -28,12 +28,19 @@ func (c *Calendar) Update(e *model.Event) {
 	}
 }
 
-func (c *Calendar) GetAllEvents(id string) []*model.Event {
-	return c.data[id]
-}
-
-func (c *Calendar) Delete(id string) {
-	delete(c.data, id)
+// Удаляет запись из мапы если все данные совпадаеют с e
+func (c *Calendar) Delete(e *model.Event) {
+	// все записи c данным ID
+	events := c.data[e.ID]
+	// удалить все запсии где данные совпадают с e
+	for i, event := range events {
+		// разыменовываем чтобы сравнить значения, а не ссылки
+		if *event == *e {
+			events = append(events[:i], events[i+1:]...)
+		}
+	}
+	// записываем данные обратну в мапу, чтобы там сохранились данные
+	c.data[e.ID] = events
 }
 
 // ищет все записи за данный день и возвращает массив Event с ними
@@ -53,10 +60,6 @@ func (c *Calendar) GetEventsForDay(user_id string, day time.Time) []*model.Event
 	return eventsForDay
 }
 
-// for _, v := range es.data {
-// 	if v.UserID == userID {
-// 		if (v.Date == start || v.Date.After(start)) && v.Date.Before(end) {
-// 			ev = append(ev, v)
-// 		}
-// 	}
-// }
+func (c *Calendar) GetEventsForWeek(user_id string, day time.Time) {
+
+}
