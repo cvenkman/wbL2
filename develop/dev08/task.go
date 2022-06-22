@@ -5,18 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
-	// "syscall"
-)
 
-//echo $USER | cat -e
-//echo "dddd" | cat -e
-//ls | pwd
-// ls | ct -e
-//ls | cat -e
+	"github.com/cvenkman/wbL2/develop/dev08/builtins"
+	"github.com/cvenkman/wbL2/develop/dev08/nc"
+)
 
 /*
 === Взаимодействие с ОС ===
@@ -70,7 +65,7 @@ func execInput(input string) error {
 	for i := range cmds {
 		cmds[i] = strings.TrimSpace(cmds[i])
 	}
-	
+
 	if strings.Contains(input, "|") {
 		return execPipe(cmds)
 	}
@@ -85,6 +80,39 @@ func execInput(input string) error {
 	return nil
 }
 
+func exeCmd(args []string) error {
+	var err error
+
+	// Check for built-in commands
+	if args[0] == "cd" {
+		_, err = builtins.CD(args)
+		return err
+	} else if args[0] == "echo" {
+		_, err = builtins.Echo(args)
+		if err != nil {
+			return err
+		}
+	} else if args[0] == "exit" {
+		os.Exit(0)
+	} else if args[0] == "nc" {
+		if len(args) < 3 {
+			return errors.New("nc: usage: nc [host] [port]")
+		}
+		return nc.Netcat(args[1], args[2])
+	}
+
+	//Exec executes binary files
+	// Pass the program and the arguments separately
+	cmd := exec.Command(args[0], args[1:]...)
+
+	// // Set the correct output device
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+
+	// Execute the command and return the error
+	return cmd.Run()
+}
+
 func execPipe(strCommands []string) error {
 	var err error
 	commands := make([]*exec.Cmd, 0)
@@ -92,7 +120,7 @@ func execPipe(strCommands []string) error {
 	for _, cmd := range strCommands {
 		cmdArgs := strings.Split(cmd, " ")
 		if cmdArgs[0] == "echo" {
-			cmdArgs, err = echo(cmdArgs)
+			cmdArgs, err = builtins.Echo(cmdArgs)
 			if err != nil {
 				return err
 			}
@@ -112,7 +140,7 @@ func execPipe(strCommands []string) error {
 	commands[len(commands)-1].Stdout, commands[len(commands)-1].Stderr = &output, &stderr
 
 	for _, cmd := range commands {
-		
+
 		if err = cmd.Start(); err != nil {
 			return err
 		}
@@ -123,234 +151,15 @@ func execPipe(strCommands []string) error {
 			return err
 		}
 	}
-	
+
 	if len(output.Bytes()) > 0 {
-		fmt.Fprint(os.Stdout, string(output.Bytes()))
+		fmt.Fprint(os.Stdout, output.String())
 	}
-
 	if len(stderr.Bytes()) > 0 {
-		fmt.Fprint(os.Stderr, string(output.Bytes()))
+		fmt.Fprint(os.Stderr, output.String())
 	}
 
 	return nil
-}
-
-
-func exeCmd(args []string) error {
-	// Check for built-in commands
-	// switch args[0] {
-	// case "cd":
-	// 	return cd(args)
-	// case "echo", "ECHO":
-	// 	return echo(args, false)
-	// }
-
-	// var cmd *exec.Cmd
-	var err error
-
-	if args[0] == "cd" {
-		_, err := cd(args)
-		return err
-	} else if args[0] == "echo" {
-		args, err = echo(args)
-		if err != nil {
-			return err
-		}
-	}
-
-	//Exec executes binary files
-	// Pass the program and the arguments separately
-	// cmd = exec.Command(args[0], args[1:]...)
-
-	// // Set the correct output device
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
-
-	// Execute the command and return the error
-	// err = cmd.Run()
-
-
-
-	binary, lookErr := exec.LookPath(args[0])
-	fmt.Println("--", binary)
-	if lookErr != nil {
-		log.Fatal(lookErr)
-	}
-	// env := os.Environ()
-
-	// ar := []string{a}
-
-	// the execution of our process will end here and be replaced by the /bin/ls -a -l -h process.
-	// execErr := syscall.Exec(binary, args, env)
-	// if execErr != nil {
-	// 	log.Fatal(execErr)
-	// }
-
-	fmt.Println("--", binary)
-	cm := exec.Command(binary, args...)
-	cm.Stderr = os.Stderr
-	cm.Stdout = os.Stdout
-	cm.Run()
-
-
-
-
-	
-	// cm.Start()
-	// cm.Stderr = os.Stderr
-	// cm.Stdout = os.Stdout
-	// cm.Wait()
-
-	// id, _, errno := syscall.Syscall(syscall.SYS_FORK, 0, 0, 0)
-	// if errno != 0 {
-	// 	os.Exit(1)
-	// }
-	// if id == 0 {
-	// 	fmt.Println("---", args)
-	// 	cmd := exec.Command(args[0], args[1:]...)
-
-	// 	cmd.Stderr = os.Stderr
-	// 	cmd.Stdout = os.Stdout
-	
-	// 	err := cmd.Run()
-	// 	// err := execInputq(args)
-		
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// 	os.Exit(0)
-	// }
-	
-
-	return nil
-}
-// execInput - вызов команды переданной в инпуте
-func execInputq(args []string) error {
-	cmd := exec.Command(args[0], args[1:]...)
-
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-
-	return cmd.Run()
-}
-
-
-func echo(args []string) ([]string, error) {
-	quotesNum := 0
-	quotesNum2 := 0
-	// count quotes
-	for _, arg := range args {
-		quotesNum += strings.Count(arg, "'")
-		quotesNum2 += strings.Count(arg, "\"")
-	}
-	if quotesNum % 2 != 0 || quotesNum2 % 2 != 0 {
-		return nil, errors.New("unclosed quote")
-	}
-
-	// ENV
-	for i, arg := range args {
-		if len(arg) > 1 && (arg[0] == '$' || arg[:2] == "\"$") {
-			arg = strings.Trim(arg, "\"")
-			arg = strings.TrimPrefix(arg, "$")
-
-			args[i] = os.Getenv(arg)
-			if args[i] == "" {
-				args = append(args[:i], args[i+1:]...)
-			}
-		}
-	}
-
-	// remove quotes
-	for i := range args {
-		args[i] = strings.Replace(args[i], "'", "", -1)
-		args[i] = strings.Replace(args[i], "\"", "", -1)
-	}
-	// cmd := exec.Command(args[0], args[1:]...)
-	// cmd.Stderr = os.Stderr
-	// cmd.Stdout = os.Stdout
-	// return cmd.Run()
-	return args, nil
-}
-
-// return pwd and error
-func cd(args []string) (string, error) {
-	prevPed, err := os.Getwd()
-	if err != nil {
-		return prevPed, errors.New("pwd error")
-	}
-	
-	var moveTo string
-	if len(args) < 2 {
-		// 'cd' to home dir
-		moveTo = "~"
-	} else {
-		moveTo = args[1]
-	}
-
-	switch moveTo {
-	// to old path
-	case "-":
-		moveTo = os.Getenv("OLDPWD")
-		if moveTo == "" {
-			return prevPed, errors.New("cd: OLDPWD not set") // check in bash
-		}
-	// to home directory
-	case "~":
-		moveTo = os.Getenv("HOME")
-		if moveTo == "" {
-			return prevPed, errors.New("cd: HOME not set")
-		}
-	}
-
-	// remove last char if it's slash
-	if moveTo[len(moveTo) - 1] == '/' {
-		moveTo = moveTo[:len(moveTo) - 1]
-	}
-
-	// don't move .. if current dir is /
-	if os.Getenv("PWD") == "/" && strings.Contains(moveTo, "..") {
-		return prevPed, nil
-	}
-
-	// Change the directory and return the error
-	err = os.Chdir(moveTo)
-	if err != nil {
-		return prevPed, err
-	}
-
-	// change pwd and oldpwd
-	pwd, err := os.Getwd()
-	if err != nil {
-		return prevPed, errors.New("pwd error")
-	}
-	os.Setenv("PWD", pwd)
-	os.Setenv("OLDPWD", prevPed)
-
-	return pwd, nil
-}
-
-func changePWDInENV(dir string) {
-	// os.Chdir(args[1]) не меняет в env pwd на новую
-	pwd := os.Getenv("PWD")
-
-	if strings.Contains(dir, "..") {
-		slashNum := strings.Count(dir, "/")
-
-		for ; slashNum > -1; slashNum-- {
-			i := strings.LastIndex(pwd, "/")
-			
-			pwd = pwd[:i]
-		}
-
-	} else if dir != "." {
-		pwd += "/" + dir
-	}
-
-	// fmt.Println(pwd)
-	if pwd == "" {
-		pwd = "/"
-	}
-	os.Setenv("PWD", pwd)
 }
 
 //В Linux запущенный экземпляр программы называется процессом.
@@ -361,7 +170,3 @@ func changePWDInENV(dir string) {
 // TTY - Имя управляющего терминала для процесса.
 // TIME - Совокупное время ЦП процесса, показанное в минутах и ​​секундах.
 // CMD - Имя команды, которая использовалась для запуска процесса.
-func ps(args []string) error {
-	// https://stackoverflow.com/questions/9030680/list-of-currently-running-process-in-go
-	return nil
-}
