@@ -22,6 +22,7 @@ func NewServer(c *config.Config) *Server {
 
 func (s *Server) Start() {
 	http.HandleFunc("/create_event", Logger(s.Create))
+	http.HandleFunc("/update_event", Logger(s.Update))
 	http.HandleFunc("/events_for_day", Logger(s.GetEventsForDay))
 	http.ListenAndServe(fmt.Sprintf("%s:%s", s.config.Host, s.config.Port), nil)
 }

@@ -43,6 +43,33 @@ func (s *Server) Create(w http.ResponseWriter, r *http.Request) {
 	// return data[:n]
 }
 
+// curl -i -X POST -H 'Content-Type: application/json' -d '{"user_id": "1", "date": "2019-09-09", "title": "fff"}' http://localhost:8080/update_event
+func (s *Server) Update(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		log.Println("wrong method, must be post")
+		return
+		// return nil
+	}
+
+	// читаем что пришло в body
+	data := make([]byte, 1024)
+	n, err := r.Body.Read(data)
+	// if err != nil {
+	// 	log.Println(err)
+	// return
+	// }
+
+	// переводим json в структуру Event
+	event, err := model.Unmarshal(data[:n])
+	if err != nil {
+		fmt.Println(err)
+		return
+		// return []byte(errorUnmarshal)
+	}
+
+	s.calendar.Update(event)
+}
+
 // http://localhost:8080/events_for_day?user_id=2&date=2019-09-09
 func (s *Server) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {

@@ -19,6 +19,15 @@ func (c *Calendar) Add(e *model.Event) {
 	c.data[e.ID] = append(c.data[e.ID], e)
 }
 
+func (c *Calendar) Update(e *model.Event) {
+	events := c.data[e.ID]
+	for _, event := range events {
+		if event.ID == e.ID && event.Date == e.Date {
+			event.Title = e.Title
+		}
+	}
+}
+
 func (c *Calendar) GetAllEvents(id string) []*model.Event {
 	return c.data[id]
 }
