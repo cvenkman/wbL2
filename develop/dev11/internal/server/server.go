@@ -19,11 +19,7 @@ func NewServer(c *config.Config) *Server {
 }
 
 func (s *Server) Start() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Привет, мир!")
-	})
-	// localhost:8080/create_event?user_id=3&date=2019-09-09
 	http.HandleFunc("/create_event", s.Create)
-	http.HandleFunc("/events_for_day", s.GetDay)
+	http.HandleFunc("/events_for_day", s.GetEventsForDay)
 	http.ListenAndServe(fmt.Sprintf("%s:%s", s.config.Host, s.config.Port), nil)
 }
