@@ -33,10 +33,6 @@ import (
 	4. Код должен проходить проверки go vet и golint.
 */
 
-// сервер для сохранения мероприятий (дата, продолжительность, название, имя пользователя)
-// доменный объект Event {data Time, title, username string}
-// валидация пришедших данных с /create_event и /update_event (не пустые поля, время в правльном формате)
-
 func main() {
 
 	var configPath string

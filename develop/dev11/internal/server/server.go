@@ -25,6 +25,8 @@ func (s *Server) Start() {
 	http.HandleFunc("/update_event", Logger(s.Update))
 	http.HandleFunc("/delete_event", Logger(s.Delete))
 	http.HandleFunc("/events_for_day", Logger(s.GetEventsForDay))
+	http.HandleFunc("/events_for_week", Logger(s.GetEventsForWeek))
+	http.HandleFunc("/events_for_month", Logger(s.GetEventsForMonth))
 	http.ListenAndServe(fmt.Sprintf("%s:%s", s.config.Host, s.config.Port), nil)
 }
 

@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -23,6 +24,7 @@ func NewEvent(id string, date time.Time, title string) *Event {
 	return &Event{ID: id, Date: date, Title: title}
 }
 
+// переводим json в структуру Event и валидируем
 func Unmarshal(data []byte) (*Event, error) {
 	event := Event{}
 	err := json.Unmarshal(data, &event)
@@ -37,4 +39,12 @@ func Unmarshal(data []byte) (*Event, error) {
 		return nil, err
 	}
 	return &event, nil
+}
+
+func (e *Event) Marshal() []byte {
+	res, err := json.Marshal(e)
+	if err != nil {
+		log.Println(err)
+	}
+	return res
 }

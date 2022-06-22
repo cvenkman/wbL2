@@ -43,6 +43,7 @@ func (c *Calendar) Delete(e *model.Event) {
 	c.data[e.ID] = events
 }
 
+// // возвращает все записи из мапы за день
 // ищет все записи за данный день и возвращает массив Event с ними
 func (c *Calendar) GetEventsForDay(user_id string, day time.Time) []*model.Event {
 	eventsForDay := make([](*model.Event), 0)
@@ -51,7 +52,10 @@ func (c *Calendar) GetEventsForDay(user_id string, day time.Time) []*model.Event
 		if key == user_id {
 			// проходимся по массиву event у этого user_id
 			for _, event := range date {
-				if event.Date == day {
+				// если день, месяц и год равен (чтобы не сравнивать минуты)
+				if event.Date.Day() == day.Day() &&
+					event.Date.Month() == day.Month() &&
+					event.Date.Year() == day.Year() {
 					eventsForDay = append(eventsForDay, event)
 				}
 			}
@@ -60,6 +64,42 @@ func (c *Calendar) GetEventsForDay(user_id string, day time.Time) []*model.Event
 	return eventsForDay
 }
 
-func (c *Calendar) GetEventsForWeek(user_id string, day time.Time) {
+// возвращает все записи из мапы за месяц
+func (c *Calendar) GetEventsForMonth(user_id string, day time.Time) []*model.Event {
+	eventsForWeek := make([](*model.Event), 0)
 
+	for key, date := range c.data {
+		if key == user_id {
+			// проходимся по массиву event у этого user_id
+			for _, event := range date {
+				// если месяц и год равен
+				if event.Date.Month() == day.Month() && event.Date.Year() == day.Year() {
+					eventsForWeek = append(eventsForWeek, event)
+				}
+			}
+		}
+	}
+	return eventsForWeek
+}
+
+// возвращает все записи из мапы за неделю
+func (c *Calendar) GetEventsForWeek(user_id string, day time.Time) []*model.Event {
+	eventsForWeek := make([](*model.Event), 0)
+
+	start := day
+	// добавляем 7 дней к переданной дате, чтобы узнать, что в этой неделе
+	end := day.AddDate(0, 0, 7)
+	for key, date := range c.data {
+		if key == user_id {
+			// проходимся по массиву event у этого user_id
+			for _, event := range date {
+				// если месяц и год равен
+				if event.Date.Month() == day.Month() && event.Date.Year() == day.Year() &&
+					((event.Date == start || event.Date.After(start)) && event.Date.Before(end)) {
+					eventsForWeek = append(eventsForWeek, event)
+				}
+			}
+		}
+	}
+	return eventsForWeek
 }
