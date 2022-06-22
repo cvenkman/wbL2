@@ -14,10 +14,11 @@ const timeLayot = "2006-01-02"
 const errorUnmarshal = "{\"error:\" \"can't unmashal\"}"
 
 // curl -i -X POST -H 'Content-Type: application/json' -d '{"user_id": "1", "date": "2019-09-09", "title": "fff"}' http://localhost:8080/create_event
-func (s *Server) Create(w http.ResponseWriter, r *http.Request) []byte {
+func (s *Server) Create(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		log.Println("wrong method, must be post")
-		return nil
+		return
+		// return nil
 	}
 
 	// читаем что пришло в body
@@ -25,27 +26,29 @@ func (s *Server) Create(w http.ResponseWriter, r *http.Request) []byte {
 	n, err := r.Body.Read(data)
 	// if err != nil {
 	// 	log.Println(err)
-	// 	return
+	// return
 	// }
 
 	// переводим json в структуру Event
 	event, err := model.Unmarshal(data[:n])
 	if err != nil {
 		fmt.Println(err)
-		return []byte(errorUnmarshal)
+		return
+		// return []byte(errorUnmarshal)
 	}
 	log.Println(r.Method, event.ID, event.Date, event.Title)
 
 	// добавляем пришедшее событие в календарь
 	s.calendar.Add(event)
-	return data[:n]
+	// return data[:n]
 }
 
 // http://localhost:8080/events_for_day?user_id=2&date=2019-09-09
-func (s *Server) GetEventsForDay(w http.ResponseWriter, r *http.Request) []byte {
+func (s *Server) GetEventsForDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		log.Println("wrong method, must be post")
-		return nil
+		return
+		// return nil
 	}
 	// берем данные из query
 	user_id := r.FormValue("user_id")
@@ -60,8 +63,9 @@ func (s *Server) GetEventsForDay(w http.ResponseWriter, r *http.Request) []byte 
 	res, err := json.Marshal(dayEvents)
 	if err != nil {
 		log.Println(err)
-		return nil
+		return
+		// return nil
 	}
 	w.Write(res)
-	return res
+	// return res
 }
