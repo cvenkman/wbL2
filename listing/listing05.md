@@ -31,6 +31,10 @@ func main() {
 
 Ответ:
 ```
-...
+error
 
+Так же, как и в 3 задании, сравниваются значение и тип интерфейса error
+
+error != customError
+[nil, nil] != [*customError, nil]
 ```
